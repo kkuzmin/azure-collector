@@ -60,6 +60,8 @@ module.exports.setHostMetadata = function(context, root, content, callback) {
         timestamp : Math.floor(Date.now() / 1000),
         data : hostmetaData
     };
+    
+    context.log.info(`Hostmeta checksum ${dataChecksum}`);
 
     build(hostmetaType, metadataPayload, function(err, buf) {
         if (err)

@@ -82,19 +82,17 @@ function parseContent(context, parsedContent, callback) {
             }
 
             var creationTime;
-            if (item.CreationTime == undefined) {
-                context.log.warn('Unable to parse CreationTime from content.');
-                creationTime = Math.floor(Date.now() / 1000);
+            if (item.CreationTime) {
+                creationTime = Math.floor(Date.parse(item.CreationTime) / 1000);
             }
             else {
-                creationTime = Math.floor(Date.parse(item.CreationTime) / 1000);
+                context.log.warn('Unable to parse CreationTime from content.');
+                creationTime = Math.floor(Date.now() / 1000);
             }
 
             var newItem = {
                 message_ts: creationTime,
-                record_type: (item.RecordType) ?
-                                item.RecordType.toString() :
-                                item.RecordType,
+                record_type: item.RecordType.toString(),
                 message: message
             };
 
@@ -105,7 +103,7 @@ function parseContent(context, parsedContent, callback) {
             if (err) {
                 return callback(`Content parsing failure. ${err}`);
             } else {
-                context.log.verbose('parsedData: ', result.length);
+                context.log.verbose('Messages fetched: ', result.length);
                 return callback(null, result);
             }
         }
@@ -158,7 +156,7 @@ function sendToIngest(context, content, callback) {
                     return g_ingestc.sendO365Data(compressed)
                         .then(resp => {
                             context.log.info(`Compressed log batch length`,
-                            `(${compressed.byteLength}) successfully sent. ${content}`);
+                            `(${compressed.byteLength} bytes) successfully sent.`);
                             return callback(null, resp);
                         })
                         .catch(function(exception){
