@@ -16,7 +16,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 // FIXME - protobuf load
-// We have to load PROTO_DEF every invocation. Maybe the solution can to to use
+// We have to load PROTO_DEF every invocation. Maybe the solution can to use
 // another library such as bpf which compiles proto to js.
 module.exports.load = function(context, callback) {
     protobuf.load(getCommonProtoPath(), function(err, root) {
