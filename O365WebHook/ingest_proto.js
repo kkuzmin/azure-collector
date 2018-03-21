@@ -61,7 +61,7 @@ module.exports.setHostMetadata = function(context, root, content, callback) {
         data : hostmetaData
     };
     
-    context.log.info(`Hostmeta checksum ${dataChecksum}`);
+    context.log.info('Hostmeta checksum', hashValue.toString('hex'));
 
     build(hostmetaType, metadataPayload, function(err, buf) {
         if (err)

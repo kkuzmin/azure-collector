@@ -155,7 +155,7 @@ function sendToIngest(context, content, callback) {
                             `(${compressed.byteLength}) exceeds maximum allowed value.`);
                     return g_ingestc.sendO365Data(compressed)
                         .then(resp => {
-                            context.log.info(`Compressed log batch length`,
+                            context.log.info(`Compressed log batch`,
                             `(${compressed.byteLength} bytes) successfully sent.`);
                             return callback(null, resp);
                         })
