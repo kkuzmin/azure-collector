@@ -81,6 +81,7 @@ function parseContent(context, parsedContent, callback) {
                 return callback(`Unable to stringify content. ${err}`);
             }
 
+            context.log.verbose('Messages Operation: ', item.Operation);
             var creationTime;
             if (item.CreationTime) {
                 creationTime = Math.floor(Date.parse(item.CreationTime) / 1000);
