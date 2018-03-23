@@ -27,6 +27,7 @@ const g_ingestc = new m_ingest.Ingest(
 
 module.exports.processNotifications = function(context, notifications, callback) {
     // Call the function per each notification in parallel.
+    context.log.info('Notifications:', notifications);
     async.each(notifications,
         function(notification, callback) {
             processContent(context, notification, callback);
