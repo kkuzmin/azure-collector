@@ -63,7 +63,7 @@ var fillOutputQueues = function(context, contentResults) {
     context.bindings.O365ContentMsg = [];
     for (var i = 0; i < contentResults.length; ++i) {
         var streamContent = contentResults[i];
-        context.log.info('Content length:', 
+        context.log.info('Content length: %s: %d', 
             streamContent.streamName, streamContent.contentList.length);
         const batchesCount = 
             Math.ceil(streamContent.contentList.length / NOTIFICATION_BATCH_LENGTH);
@@ -92,7 +92,6 @@ module.exports = function (context, AlertlogicO365ListTimer) {
             async.map(JSON.parse(process.env.O365_CONTENT_STREAMS), 
                 function(stream, asyncCallback) {
                     var streamListState = m_state.getStreamListState(stream, currentState);
-                    context.log.info('Listing content:', streamListState);
                     processStream(stream, streamListState, function(listErr, listResult) {
                         if (listErr) {
                             return asyncCallback(listErr);
