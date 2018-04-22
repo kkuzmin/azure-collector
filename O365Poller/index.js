@@ -21,6 +21,7 @@ const PAGES_COUNT = 5;
 
 // One content notification is about 500 bytes.
 // Max Azure queue message size is 48K when using base64.
+const NOTIFICATIONS_BATCH_SIZE_DEFAULT = 10;
 
 var processStream = function(stream, listState, callback) {
     m_o365mgmnt.subscriptionsContent(
@@ -64,7 +65,10 @@ var fillOutputQueues = function(context, contentResults) {
         var streamContent = contentResults[i];
         context.log.info('Content length: %s: %d', 
             streamContent.streamName, streamContent.contentList.length);
-        const batchSize = process.env.NOTIFICATIONS_BATCH_SIZE;
+        const batchSize = 
+            process.env.NOTIFICATIONS_BATCH_SIZE
+            ? process.env.NOTIFICATIONS_BATCH_SIZE
+            : NOTIFICATIONS_BATCH_SIZE_DEFAULT;
         const batchesCount = 
             Math.ceil(streamContent.contentList.length / batchSize);
         for (var j = 0; streamContent.contentList.length && j < batchesCount; ++j) {
