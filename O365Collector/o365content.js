@@ -96,6 +96,8 @@ function parseContent(context, parsedContent, callback) {
             else {
                 creationTime = Math.floor(Date.parse(item.CreationTime) / 1000);
             }
+            
+            context.log.info('Message TS:', item.CreationTime);
 
             var newItem = {
                 message_ts: creationTime,
