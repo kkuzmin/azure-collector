@@ -21,7 +21,6 @@ const PAGES_COUNT = 5;
 
 // One content notification is about 500 bytes.
 // Max Azure queue message size is 48K when using base64.
-const NOTIFICATION_BATCH_LENGTH = 3; 
 
 var processStream = function(stream, listState, callback) {
     m_o365mgmnt.subscriptionsContent(
@@ -65,12 +64,13 @@ var fillOutputQueues = function(context, contentResults) {
         var streamContent = contentResults[i];
         context.log.info('Content length: %s: %d', 
             streamContent.streamName, streamContent.contentList.length);
+        const batchSize = process.env.NOTIFICATIONS_BATCH_SIZE;
         const batchesCount = 
-            Math.ceil(streamContent.contentList.length / NOTIFICATION_BATCH_LENGTH);
+            Math.ceil(streamContent.contentList.length / batchSize);
         for (var j = 0; streamContent.contentList.length && j < batchesCount; ++j) {
             var notificationBatch = JSON.stringify(streamContent.contentList.slice(
-                    j * NOTIFICATION_BATCH_LENGTH, 
-                    (j + 1) * NOTIFICATION_BATCH_LENGTH));
+                    j * batchSize, 
+                    (j + 1) * batchSize));
             context.bindings.O365ContentMsg.push(notificationBatch);
         }
     }
@@ -92,6 +92,7 @@ module.exports = function (context, AlertlogicO365ListTimer) {
             async.map(JSON.parse(process.env.O365_CONTENT_STREAMS), 
                 function(stream, asyncCallback) {
                     var streamListState = m_state.getStreamListState(stream, currentState);
+                    context.log.info('Listing content:', streamListState);
                     processStream(stream, streamListState, function(listErr, listResult) {
                         if (listErr) {
                             return asyncCallback(listErr);

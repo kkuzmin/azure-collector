@@ -28,6 +28,7 @@ process.env.O365_HOST_ID = 'o365-host-id';
 process.env.CUSTOMCONNSTR_APP_AL_RESIDENCY = 'default';
 process.env.CUSTOMCONNSTR_APP_AL_API_ENDPOINT = 'al-api-endpoint';
 process.env.AzureWebJobsStorage = 'DefaultEndpointsProtocol=https;AccountName=testappo365;AccountKey=S0meKey+';
+process.env.NOTIFICATIONS_BATCH_SIZE = 5;
 
 
 var context = {

@@ -111,6 +111,10 @@
                         {
                             "name": "APP_TENANT_ID",
                             "value": "[variables('tenantId')]"
+                        },
+                        {
+                            "name": "NOTIFICATIONS_BATCH_SIZE",
+                            "value": "5"
                         }
                     ],
                     "connectionStrings": [
