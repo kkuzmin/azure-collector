@@ -23,7 +23,6 @@ Installation requires the following steps:
 In order to install O365 Log collector:
 
 1. Log into [O365 portal](https://portal.office.com) as AD tenant administrator.
-1. Go to `Setup` and `Domain` and make a note of O365 domain name to collect logs from, for example, `example.onmicrosoft.com`.
 1. Navigate to `Admin Centers` and `Azure AD`.
 1. On the left side panel click `Azure Active Directory` and `App Registrations`.
 1. Click `+New application registration`, fill in configuration parameters and click `Create`:
@@ -45,7 +44,7 @@ In order to install O365 Log collector:
 click on the link under `Managed application in local directory`.  Then click `Properties`.  The `Service Principal Id`
 is labeled `Object ID` on the properties page.  **Caution** This is not the same `Object ID` listed in the `Properties` blade reached 
 by clicking `Settings` or `All Settings` from the `Registered app`.  It is also not the `Object ID` shown on the `Registered app`
-blade itself.   
+blade itself.
 
 ## Create an Alert Logic Access Key
 
@@ -82,15 +81,15 @@ curl -X DELETE -H "x-aims-auth-token: $AL_TOKEN" https://api.global-services.glo
 
 ## Function deployment
 
-Log into [Azure portal](https://portal.azure.com). **Note**, In order to perform steps below you should have an active Azure subscription, to find out visit [Azure subscriptions blade](https://portal.azure.com/#blade/Microsoft_Azure_Billing/SubscriptionsBlade)
+Log into [Azure portal](https://portal.azure.com). **Note**, In order to perform steps below you should have an active Azure subscription, to find out visit [Azure subscriptions blade](https://portal.azure.com/#blade/Microsoft_Azure_Billing/SubscriptionsBlade).
+
+If multiple Active Directory tenants are used within your organization please login into the same tenant where application registration was created during [Register a New O365 Web Application in O365](#register-a-new-o365-web-application-in-o365). How to find Office365 tenant id see [here](https://support.office.com/en-gb/article/find-your-office-365-tenant-id-6891b561-a52d-4ade-9f39-b492285e2c9b).
 
 ### Deploy via the Custom ARM Template in an Azure Subscription
 
-1. Download an ARM [template](https://github.com/alertlogic/azure-collector/raw/master/template.json)
-1. Go to [Customer Deployment](https://portal.azure.com/#create/Microsoft.Template) page. Type in `deploy` in a search query located on top of Azure Web UI and select `Deploy a custom template`.
-1. Click `Build your own template in the editor` and load the file previously downloaded on step 1 above.
-1. Click `Save` button.
-2. Fill in required template parameters and click the `Purchase` button to start a deployment. I.e.:
+[![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Falertlogic%2Fazure-collector%2Fmaster%2Ftemplate.json)
+
+Fill in required template parameters and click the `Purchase` button to start a deployment:
    - `Name` - Any name
    - `Storage Name` - Any Storage Account name (that does not currently exist)
    - `Alert Logic Access Key ID` - `access_key_id` returned from AIMs [above](#create_an_alert_logic_access_key)
@@ -99,15 +98,12 @@ Log into [Azure portal](https://portal.azure.com). **Note**, In order to perform
    - `Alert Logic Data Residency` - usually `default`
    - `Office365 Content Streams` - The list of streams you would like to collect.  Valid values are:
         - ["Audit.AzureActiveDirectory","Audit.Exchange","Audit.SharePoint","Audit.General", "DLP.All"]
-   - `Office365 Tenant ID` - The GUID of the tenant e.g. `alazurealertlogic.onmicrosoft.com`
    - `Service Principal ID` - The `Object ID` of the application that created the subscription.
    You can obtain it from _Azure_ -> _AD_ -> _App registrations_ -> _Your app name_ -> Link under 
 _Managed application in local directory_ -> _Properties_ -> _Object ID_
    - `App Client ID` - The GUID of your application that created the subscription.
                      You can obtain it from _Azure_ -> _AD_ -> _App registrations_ -> _Your app name_
    - `App Client Secret` - The secret key of your application from _App Registrations_
-   - `Repository URL` - must be `https://github.com/alertlogic/azure-collector.git`
-   - `Repository Branch` - should usually be `master`
 
 ### Deploy via Azure CLI
 
@@ -136,10 +132,12 @@ Wait until it is deployed successfully.
 
 # How It Works
 
+**Note:** the following Azure functions use Application/O365 tenant id (`APP_TENANT_ID` web application setting) as a `PublisherIdentifier` during O365 management API requests. More info about `PublisherIdentifier` can be found [here](https://msdn.microsoft.com/en-us/office-365/troubleshooting-the-office-365-management-activity-api#requesting-content-blobs-and-throttling). 
+
 ## Master Function
 
 The `Master` function is a timer trigger function which is responsible for:
-- registering the Azure web app In Alertlogic backend;
+- registering the Azure web app in Alertlogic backend;
 - reporting health-checks to the backed;
 - performing log source configuration updates, which happen via Alertlogic UI.
 
@@ -150,9 +148,9 @@ npm package.json file.  To display the current version locally, issue `npm run l
 
 The `Updater` is a timer triggered function runs deployment sync operation every 12 hours in order to keep entire Web application up to date.
 
-## Collector Function
+## O365WebHook Function
 
-The `Collector` function exposes an HTTP API endpoint `https://<app-name>/o365/webhook` which is registered as an [Office 365 webhook](https://msdn.microsoft.com/en-us/office-365/office-365-management-activity-api-reference#start-a-subscription) and processes O365 activity notifications. Below is a notification example,
+The `O365WebHook` function exposes an HTTP API endpoint `https://<app-name>/o365/webhook` which is registered as an [Office 365 webhook](https://msdn.microsoft.com/en-us/office-365/office-365-management-activity-api-reference#start-a-subscription) and processes O365 activity notifications. Below is a notification example,
 
 ```
 [
@@ -177,7 +175,9 @@ The `Collector` function exposes an HTTP API endpoint `https://<app-name>/o365/w
 ]
 ```
 
-A notification contains a link to the actual data which is retrieved by the `Collector`, wrapped into a protobuf structure [TBD link]() and is sent into Alertlogic Ingest service.
+A notification contains a link to the actual data which is retrieved by the `O365WebHook`, wrapped into a protobuf [structure](proto/common_proto.piqi.proto) and is sent into Alertlogic Ingest service.
+
+**Note:** it can take up to 24 hours before audit content is available. Please follow [this link](https://support.office.com/en-us/article/Search-the-audit-log-in-the-Office-365-Security-Compliance-Center-0d4d0f35-390b-4518-800e-0c7ec95e946c?ui=en-US&rs=en-US&ad=US#PickTab=BYB) to find the time it takes for the different services in Office 365.
 
 # Local Development
 
@@ -195,6 +195,7 @@ Please use the following [code style](https://github.com/airbnb/javascript) as m
 ## Setting environment in dev_config.js
 
 - `process.env.APP_TENANT_ID` - The GUID of the tenant i.e. 'alazurealertlogic.onmicrosoft.com'
+- `process.evn.APP_RESOURCE_GROUP` - The name of the resource group where your application is deployed.
 - `process.env.CUSTOMCONNSTR_APP_CLIENT_ID` - The GUID of your application that created the subscription.
 You can obtain it from _Azure_ -> _AD_ -> _App registrations_ -> _Your app name_
 - `process.env.CUSTOMCONNSTR_APP_CLIENT_SECRET` - A secret key of your application from _App Registrations_.
